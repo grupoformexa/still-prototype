@@ -658,10 +658,17 @@ const APP = (() => {
   const icon = (n, cls='') => `<svg class="icon ${cls} ${['play','pause'].includes(n)?'fill':''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||''}</svg>`;
 
   // ---------- State ----------
-  const detected = (navigator.language||'en').toLowerCase().startsWith('es') ? 'es' : 'en';
-  const state = { sessions:[], projects:[], people:[], vocabulary:[], settings:{uiLang:detected, spokenLang: detected==='es'?'es-MX':'en-US', endPhrases:[...E.DEFAULT_END], ai:true, sensitivity:'normal', aiGranted:true}, active:null, pendingActivity:null, search:'', range:'week', ui:{} };
+  // Spanish is the primary language of this product: recognition and interface default to it
+  // (keeping the phone's Spanish region when it has one). Both can be changed in Settings.
+  const navLang = (navigator.language||'').toLowerCase();
+  const defaultSpoken = navLang.startsWith('es-') && navLang.length >= 5 ? navLang.slice(0,3)+navLang.slice(3,5).toUpperCase() : 'es-MX';
+  const state = { sessions:[], projects:[], people:[], vocabulary:[], settings:{uiLang:'es', spokenLang: defaultSpoken, uiLangSet:false, spokenLangSet:false, endPhrases:[...E.DEFAULT_END], ai:true, sensitivity:'normal', aiGranted:true}, active:null, pendingActivity:null, search:'', range:'week', ui:{} };
   function save(){ try { const sessions = state.sessions.map(s => Object.assign({}, s, {segments: s.segments.map(g => Object.assign({}, g, {blob:undefined}))})); localStorage.setItem(KEY, JSON.stringify({sessions, projects:state.projects, people:state.people, vocabulary:state.vocabulary, settings:state.settings})); } catch {} }
-  function load(){ try { const raw = localStorage.getItem(KEY); if (!raw) return false; const d = JSON.parse(raw); state.sessions = d.sessions||[]; state.projects = d.projects||[]; state.people = d.people||[]; state.vocabulary = d.vocabulary||[]; Object.assign(state.settings, d.settings||{}); return true; } catch { return false; } }
+  function load(){ try { const raw = localStorage.getItem(KEY); if (!raw) return false; const d = JSON.parse(raw); state.sessions = d.sessions||[]; state.projects = d.projects||[]; state.people = d.people||[]; state.vocabulary = d.vocabulary||[]; Object.assign(state.settings, d.settings||{});
+    // Settings saved by an earlier version followed the phone's language; unless the user chose explicitly, move to Spanish.
+    if (!state.settings.spokenLangSet && !String(state.settings.spokenLang).startsWith('es')) state.settings.spokenLang = defaultSpoken;
+    if (!state.settings.uiLangSet) state.settings.uiLang = 'es';
+    return true; } catch { return false; } }
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const sid = () => 's-'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);
 
@@ -1103,7 +1110,7 @@ Reply with only a JSON object of this exact shape:
   function linkProject(p){ const names = [p.name, ...(p.aliases||[])].map(n => n.toLowerCase()); for (const th of allThoughts()) if (!th.projectId && names.some(n => E.normalize(th.originalText).includes(E.normalize(n)))) th.projectId = p.id; }
   function onChange(e){
     const el = e.target; if (el.dataset.field) { const th = findThought(el.dataset.id); if (!th) return; if (el.dataset.field === 'type') setType(th, el.value); else if (el.dataset.field === 'category') th.category = el.value; else if (el.dataset.field === 'project') th.projectId = el.value || null; th.reviewed = true; th.needsReview = false; save(); render(); }
-    else if (el.dataset.set) { state.settings[el.dataset.set] = el.value; save(); render(); }
+    else if (el.dataset.set) { state.settings[el.dataset.set] = el.value; if (el.dataset.set === 'uiLang') state.settings.uiLangSet = true; if (el.dataset.set === 'spokenLang') state.settings.spokenLangSet = true; save(); render(); }
   }
   function onInput(e){ if (e.target.id === 'search-input') { state.search = e.target.value; render(); } }
   function onSubmit(e){ const f = e.target.closest && e.target.closest('[data-form]'); if (!f) return; e.preventDefault(); if (f.dataset.form === 'write') onClick({target: f.querySelector('[data-act="write"]')}); }
