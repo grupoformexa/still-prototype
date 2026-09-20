@@ -1,3 +1,17 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Still">
+<meta name="theme-color" content="#101312">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
 <title>Still</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -152,6 +166,8 @@ a{color:var(--accent)}
 .right{margin-left:auto}
 @media (max-width:420px){.timer{font-size:56px}}
 </style>
+</head>
+<body>
 <div id="app" class="shell"></div>
 <div id="overlay" class="overlay" hidden></div>
 <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
@@ -1107,4 +1123,7 @@ Reply with only a JSON object of this exact shape:
   return {boot, state};
 })();
 APP.boot();
+
 </script>
+</body>
+</html>
